@@ -7,10 +7,10 @@ architecture, and milestone order. Separate its target state from the repository
 implemented state.
 
 Milestone 1 is complete and was manually verified by the maintainer on macOS.
-Milestone 2 is in progress: Codex process ownership and PTY lifecycle are
-implemented, while voice capture and transcript injection into that session are
-not. Continue with the narrowest verifiable remaining Milestone 2 slice unless a
-task explicitly changes priority.
+Milestone 2 is implemented with a terminal-local F2 recording toggle and safe
+composer insertion, but its integrated microphone-to-Codex path still requires a
+fresh maintainer live exercise. Continue with that verification or Milestone 3's
+narrowest slice unless a task explicitly changes priority.
 
 For each change:
 

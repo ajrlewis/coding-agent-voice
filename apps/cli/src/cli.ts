@@ -39,6 +39,10 @@ const HELP = `Usage:
   voice codex [args...]
   voice test [--device <name>] [--backend <backend>] [--language <code>]
 
+Codex voice control:
+  F2                              Start recording; press F2 again to stop
+                                  The transcript is inserted, not submitted
+
 Backends:
   macOS: avfoundation
   Windows: dshow
@@ -100,7 +104,7 @@ export async function runCli(
   });
 
   deps.stderr.write(
-    `Hosted transcription: recorded audio will be sent to OpenAI using ${provider.model}.\n`,
+    "Hosted transcription: recorded audio will be sent to OpenAI.\n",
   );
   deps.stderr.write("Recording... press Enter to stop.\n");
   const session = await recorder.start();

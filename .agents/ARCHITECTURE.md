@@ -1,10 +1,11 @@
 # Architecture
 
-`README.md` is the canonical product specification. Milestone 1 is complete, and
-the first Milestone 2 slice adds `packages/agents` and `packages/terminal`.
-`voice codex [args...]` now owns Codex in an interactive PTY in the current
-directory. Voice capture, transcription, and transcript injection into that
-session remain unimplemented. Milestone 1 has been manually verified on macOS.
+`README.md` is the canonical product specification. Milestones 1 and 2 are
+implemented, though the integrated Milestone 2 microphone-to-Codex path still
+needs a maintainer's live verification. `voice codex [args...]` owns Codex in an
+interactive PTY in the current directory, intercepts F2 as an explicit recording
+toggle, and inserts completed transcripts into the composer without submitting
+them. Milestone 1 has been manually verified on macOS.
 
 ## Target runtime
 
@@ -20,8 +21,9 @@ system, or LLM proxy.
 ## Intended boundaries
 
 - `apps/cli` (implemented): parses `voice test` and `voice codex`, validates
-  provider configuration for the test flow, coordinates runtime boundaries,
-  owns user-facing output, and propagates Codex's exit status.
+  provider configuration lazily for the Codex voice flow, coordinates runtime
+  boundaries, owns the F2 interaction and user-facing output, and propagates
+  Codex's exit status.
 - `packages/audio` (implemented): defines recorder/session contracts and an FFmpeg
   recorder. Platform strategies use AVFoundation on macOS, DirectShow on Windows,
   and prefer PulseAudio over ALSA when those inputs are compiled into FFmpeg on
@@ -35,10 +37,11 @@ system, or LLM proxy.
   `OPENAI_TRANSCRIPTION_MODEL`.
 - `packages/agents` (implemented for Codex): small executable and argument
   adapters that do not contain audio or transcription logic.
-- `packages/terminal` (process management implemented): executable discovery and
-  injected PTY/host-terminal boundaries backed by node-pty 1.1.0. It proxies I/O,
-  resize events, and supported signals; propagates child exit status; restores
-  terminal state; and removes listeners on exit. Transcript injection remains.
+- `packages/terminal` (implemented): executable discovery and injected
+  PTY/host-terminal boundaries backed by node-pty 1.1.0. It proxies I/O, exposes
+  only an input filter and active-session injection method to the coordinator,
+  handles resize events and supported signals, propagates child exit status,
+  restores terminal state, and removes listeners on exit.
 
 Dependencies should point inward through these contracts. Audio must not know
 about agents or providers; agent adapters must not know about audio or

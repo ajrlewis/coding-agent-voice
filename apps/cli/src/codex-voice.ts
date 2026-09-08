@@ -97,7 +97,7 @@ export class CodexVoiceController {
       this.#recording = recording;
       this.#state = "recording";
       this.#status(
-        `Recording; press F2 to stop. Audio will be sent to OpenAI using ${this.#provider.model}.`,
+        "Recording; press F2 to stop. Audio will be sent to OpenAI.",
         "status",
       );
     } catch (error) {
