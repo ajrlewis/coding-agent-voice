@@ -28,8 +28,10 @@ system, or LLM proxy.
   removed from temporary storage before the provider receives them.
 - `packages/transcription` (implemented): defines the provider contract and an
   OpenAI hosted implementation using the audio transcriptions endpoint. The API
-  key comes only from `OPENAI_API_KEY`; the default model is
-  `gpt-4o-transcribe` and can be changed with `OPENAI_TRANSCRIPTION_MODEL`.
+  key comes from `OPENAI_API_KEY`, either exported by the shell or loaded from an
+  ignored `.env.local` file. Exported values take precedence. The default model
+  is `gpt-4o-transcribe` and can be changed with
+  `OPENAI_TRANSCRIPTION_MODEL`.
 - `packages/agents`: small executable and argument adapters for coding agents.
 - `packages/terminal`: PTY spawning, I/O proxying, transcript injection, resize,
   signals, and child-process lifecycle.

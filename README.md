@@ -612,6 +612,11 @@ For example:
 export OPENAI_API_KEY="..."
 ```
 
+For local development, the CLI also loads `OPENAI_API_KEY` and
+`OPENAI_TRANSCRIPTION_MODEL` from an ignored `.env.local` file. Copy
+`.env.example` to `.env.local` and fill in the key; values explicitly exported
+by the shell take precedence.
+
 API keys must never be stored in repository configuration by default.
 
 ## Technology

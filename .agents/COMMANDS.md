@@ -11,6 +11,9 @@
 
 ```sh
 pnpm install
+
+# Optional local credentials. This file is ignored by Git.
+cp .env.example .env.local
 ```
 
 ## Development and validation
@@ -46,8 +49,10 @@ pnpm check
 pnpm build
 node apps/cli/dist/main.js --help
 
-# Sends the completed recording to OpenAI. Keep the key in the environment.
+# Sends the completed recording to OpenAI. Set OPENAI_API_KEY in the shell or
+# the ignored .env.local file.
 OPENAI_API_KEY=... node apps/cli/dist/main.js test
+node apps/cli/dist/main.js test
 
 # Windows requires an explicit DirectShow microphone name.
 OPENAI_API_KEY=... node apps/cli/dist/main.js test --device "Microphone name"

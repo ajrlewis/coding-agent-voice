@@ -36,6 +36,7 @@ Backends:
 Environment:
   OPENAI_API_KEY                Required; used only for the hosted API request
   OPENAI_TRANSCRIPTION_MODEL    Optional; defaults to gpt-4o-transcribe
+  .env.local                    Optional; shell environment values take precedence
 `;
 
 export async function runCli(
