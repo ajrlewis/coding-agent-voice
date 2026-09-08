@@ -13,7 +13,7 @@ const F2_SEQUENCE =
 export type VoiceStatusLevel = "error" | "status";
 
 export interface CodexVoiceControllerOptions {
-  providerFactory: () => TranscriptionProvider & { model: string };
+  providerFactory: () => TranscriptionProvider;
   recorderFactory: () => AudioRecorder;
   secrets?: readonly string[];
   status: (message: string, level: VoiceStatusLevel) => void;
@@ -26,7 +26,7 @@ export class CodexVoiceController {
   #cancelStart = false;
   #closed = false;
   #operation = Promise.resolve();
-  #provider: (TranscriptionProvider & { model: string }) | undefined;
+  #provider: TranscriptionProvider | undefined;
   #recording: RecordingSession | undefined;
   #state: VoiceState = "idle";
 

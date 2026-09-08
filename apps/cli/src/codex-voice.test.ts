@@ -27,7 +27,6 @@ function deferred<T>(): {
 function terminal(): TerminalSession & { writes: string[] } {
   const writes: string[] = [];
   return {
-    exited: new Promise(() => undefined),
     inject: (data) => (writes.push(data), true),
     writes,
   };

@@ -59,7 +59,6 @@ export interface TerminalRunRequest {
 }
 
 export interface TerminalSession {
-  readonly exited: Promise<number>;
   inject(data: string): boolean;
 }
 
@@ -171,7 +170,6 @@ export class NodePtyTerminal implements TerminalRunner {
       exitSubscription = child.onExit(({ exitCode }) => resolveExit(exitCode));
     });
     const session: TerminalSession = {
-      exited: exit,
       inject: (data) => {
         if (finished) return false;
         child.write(data);
