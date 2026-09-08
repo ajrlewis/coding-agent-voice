@@ -121,14 +121,17 @@ test("voice codex forwards arguments and the current directory", async () => {
   });
 
   assert.equal(code, 23);
-  assert.deepEqual(request, {
-    args: ["--resume", "session with spaces"],
-    command: "/tools/codex",
-    cwd: "/work/current-project",
-    environment: { PATH: "/tools", SECRET_VALUE: "must-not-be-printed" },
+  assert.deepEqual(request?.args, ["--resume", "session with spaces"]);
+  assert.equal(request?.command, "/tools/codex");
+  assert.equal(request?.cwd, "/work/current-project");
+  assert.deepEqual(request?.environment, {
+    PATH: "/tools",
+    SECRET_VALUE: "must-not-be-printed",
   });
+  assert.equal(typeof request?.inputFilter, "function");
   assert.equal(stdout.chunks.join(""), "");
-  assert.equal(stderr.chunks.join(""), "");
+  assert.match(stderr.chunks.join(""), /press F2/);
+  assert.doesNotMatch(stderr.chunks.join(""), /must-not-be-printed/);
 });
 
 test("cancels the recording when waiting for input fails", async () => {

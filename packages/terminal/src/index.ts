@@ -9,4 +9,5 @@ export {
   type TerminalHost,
   type TerminalRunner,
   type TerminalRunRequest,
+  type TerminalSession,
 } from "./terminal.js";

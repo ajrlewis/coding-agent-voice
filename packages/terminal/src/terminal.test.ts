@@ -170,6 +170,45 @@ test("spawns in the requested directory and proxies terminal lifecycle", async (
   assert.equal(child.disposedExit, true);
 });
 
+test("filters host input and exposes active-session injection", async () => {
+  const child = new FakePty();
+  const host = new FakeHost();
+  let notifySpawned!: () => void;
+  const spawned = new Promise<void>((resolve) => (notifySpawned = resolve));
+  const terminal = new NodePtyTerminal({
+    executableLocator: async () => "/usr/local/bin/codex",
+    host,
+    loadPty: async () => ({
+      spawn: () => {
+        notifySpawned();
+        return child;
+      },
+    }),
+  });
+  let inject: ((data: string) => boolean) | undefined;
+
+  const result = terminal.run({
+    args: [],
+    command: "codex",
+    cwd: "/work/project",
+    environment: {},
+    inputFilter: (data, session) => {
+      inject = session.inject;
+      return data.replace("<voice>", "");
+    },
+  });
+  await spawned;
+
+  host.inputListener?.("ordinary<voice>input");
+  assert.equal(inject?.("transcript"), true);
+  assert.deepEqual(child.writes, ["ordinaryinput", "transcript"]);
+
+  child.exitListener?.({ exitCode: 0 });
+  assert.equal(await result, 0);
+  assert.equal(inject?.("too late"), false);
+  assert.deepEqual(child.writes, ["ordinaryinput", "transcript"]);
+});
+
 test("fails before loading the PTY when the executable is unavailable", async () => {
   let loaded = false;
   const terminal = new NodePtyTerminal({

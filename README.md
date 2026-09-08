@@ -42,11 +42,11 @@ transcript
 stdout
 ```
 
-Milestone 2 is in progress. `voice codex [args...]` now owns Codex in an
-interactive PTY, preserving the current directory, terminal I/O, resize and
-supported signal behavior, child exit status, and cleanup. Voice capture,
-transcription, and transcript injection are not connected to the Codex session
-yet. Claude Code is not implemented.
+Milestone 2 is implemented and awaiting a maintainer's complete live
+microphone-to-Codex verification. `voice codex [args...]` owns Codex in an
+interactive PTY and uses F2 as a terminal-local recording toggle. It preserves
+the current directory, ordinary terminal I/O, resize and supported signal
+behavior, child exit status, and cleanup. Claude Code is not implemented.
 
 ## Quick start
 
@@ -78,15 +78,19 @@ to OpenAI for transcription. Status and privacy messages go to stderr; only the
 transcript is written to stdout. `.env.local` is ignored by Git, and an exported
 `OPENAI_API_KEY` takes precedence over the file.
 
-To exercise the current Codex process-management slice:
+To use voice input with Codex:
 
 ```bash
 cd my-project
 node /path/to/coding-agent-voice/apps/cli/dist/main.js codex [args...]
 ```
 
-Codex must be installed and available on `PATH`. This command does not provide
-voice input yet.
+Codex must be installed and available on `PATH`. Press F2 once to start
+recording, speak, then press F2 again to stop and transcribe. The transcript is
+inserted into the active Codex composer with bracketed paste; it is deliberately
+not submitted. Review or edit it, then press Enter yourself. Recording and
+transcription state appears in the terminal title where the terminal supports
+title updates, while actionable failures are printed in the terminal.
 
 ## Goals
 
@@ -191,7 +195,8 @@ voice config
 
 ### `voice codex`
 
-Starts Codex in an owned interactive PTY. Voice input is not connected yet.
+Starts Codex in an owned interactive PTY with the F2 recording toggle described
+above. Transcripts are inserted for review and are not submitted automatically.
 
 ```bash
 cd ~/code/project
@@ -320,18 +325,16 @@ PTY-specific behavior should be isolated behind a terminal/process abstraction.
 
 ## Push-to-talk
 
-The intended interaction is push-to-talk rather than continuous recording.
-
-Conceptually:
+The current terminal-local interaction is an explicit F2 toggle:
 
 ```text
-key down
+F2
    ↓
 start recording
    ↓
 user speaks
    ↓
-key up
+F2
    ↓
 stop recording
    ↓
@@ -340,9 +343,25 @@ transcribe
 insert transcript
 ```
 
-The exact hotkey mechanism is intentionally not fixed yet.
+This is a toggle rather than press-and-hold because ordinary terminal input does
+not portably expose key-release events. Some terminals support enhanced keyboard
+protocols with release events, but the wrapper does not assume that support. F2
+has lower collision risk than Codex and editor Ctrl-key shortcuts, works through
+the common macOS, Linux, and Windows terminal escape encodings, and is easy to
+exercise at the injected terminal boundary. On compact keyboards it may require
+the Fn modifier. A terminal emulator can reserve F2, and Codex can assign F2 in a
+custom keymap; users with either customization must remove that collision for
+this first slice.
 
-The first implementation should prioritize reliability and portability over sophisticated global keyboard handling.
+The wrapper consumes recognized F2 sequences and forwards all other keyboard
+input unchanged. A second activation while the microphone is still starting
+cancels that recording. Activations while transcription is already running are
+ignored cleanly. Exiting Codex cancels an active recording and prevents results
+from an in-flight stop or transcription from being inserted afterward.
+
+Transcripts are inserted through bracketed paste after terminal control bytes
+are removed. No Enter is injected, so voice input cannot automatically submit a
+prompt.
 
 Possible future interactions include:
 
@@ -585,7 +604,7 @@ export interface CodingAgent {
 
 Agent adapters must not contain transcription or audio logic.
 
-### `packages/terminal` (process-management slice implemented)
+### `packages/terminal` (implemented for Codex)
 
 Interactive terminal process management.
 
@@ -602,8 +621,8 @@ Responsibilities:
 This package provides the boundary between the voice system and interactive coding-agent TUIs.
 
 The current node-pty-backed implementation provides process ownership, I/O
-proxying, resize and supported signal forwarding, exit propagation, and cleanup.
-Transcript injection is not implemented yet.
+proxying, a small injectable input-filter/session-injection boundary, resize and
+supported signal forwarding, exit propagation, and cleanup.
 
 ## Possible future packages
 
@@ -825,7 +844,7 @@ hosted-processing disclosure, temporary-file cleanup, `.env.local` support, and
 automated boundary/orchestration tests. The maintainer manually verified the
 complete flow on macOS with a real microphone and API credential.
 
-### Milestone 2 — Codex (in progress)
+### Milestone 2 — Codex (implemented; live end-to-end verification pending)
 
 Make this work:
 
@@ -845,10 +864,14 @@ Requirements:
 
 This is the first complete product milestone.
 
-Implemented so far: the Codex adapter, argument forwarding, executable checks,
-and interactive PTY ownership in the current directory, including I/O, resize,
-supported signals, child exit status, and cleanup. Push-to-talk capture,
-transcription, and transcript injection remain.
+Implemented: the Codex adapter, argument forwarding, executable checks,
+interactive PTY ownership in the current directory, F2 recording activation,
+OpenAI transcription, safe composer insertion without automatic submission,
+visible status, and cancellation/error/child-exit handling. Automated tests use
+injected hardware, provider, interaction, PTY, and host boundaries. A maintainer
+still needs to verify the complete microphone → hosted transcription → live
+Codex composer flow after this integration change; the earlier live `voice test`
+exercise does not establish that result.
 
 ### Milestone 3 — Claude Code
 

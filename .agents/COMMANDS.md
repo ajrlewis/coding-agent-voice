@@ -51,8 +51,8 @@ pnpm check
 pnpm build
 node apps/cli/dist/main.js --help
 
-# Requires Codex on PATH and an interactive terminal. This currently verifies
-# process ownership only; voice input is not connected to the session yet.
+# Requires Codex on PATH and an interactive terminal. In an interactive session,
+# press F2 to start recording and F2 again to transcribe and insert into Codex.
 node apps/cli/dist/main.js codex --version
 node apps/cli/dist/main.js codex
 

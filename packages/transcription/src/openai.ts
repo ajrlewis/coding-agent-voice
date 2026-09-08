@@ -74,14 +74,16 @@ export class OpenAITranscriptionProvider implements TranscriptionProvider {
         body: form,
       });
     } catch (error) {
-      const detail = error instanceof Error ? error.message : String(error);
+      const detail = this.#redact(
+        error instanceof Error ? error.message : String(error),
+      );
       throw new TranscriptionError(
         `OpenAI transcription request failed: ${detail}`,
       );
     }
 
     if (!response.ok) {
-      const detail = (await response.text()).trim().slice(0, 500);
+      const detail = this.#redact((await response.text()).trim().slice(0, 500));
       throw new TranscriptionError(
         `OpenAI transcription failed with HTTP ${response.status}${detail === "" ? "." : `: ${detail}`}`,
       );
@@ -101,6 +103,12 @@ export class OpenAITranscriptionProvider implements TranscriptionProvider {
       );
     }
     return payload.text.trim();
+  }
+
+  #redact(value: string): string {
+    return this.#apiKey === ""
+      ? value
+      : value.replaceAll(this.#apiKey, "[redacted]");
   }
 }
 

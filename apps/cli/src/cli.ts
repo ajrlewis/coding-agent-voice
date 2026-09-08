@@ -15,6 +15,8 @@ import {
   type TranscriptionProvider,
 } from "@coding-agent-voice/transcription";
 
+import { CodexVoiceController } from "./codex-voice.js";
+
 export interface CliDependencies {
   agent: CodingAgent;
   cwd: string;
@@ -36,6 +38,10 @@ export interface CliDependencies {
 const HELP = `Usage:
   voice codex [args...]
   voice test [--device <name>] [--backend <backend>] [--language <code>]
+
+Codex voice control:
+  F2                              Start recording; press F2 again to stop
+                                  The transcript is inserted, not submitted
 
 Backends:
   macOS: avfoundation
@@ -59,12 +65,32 @@ export async function runCli(
   }
   if (argv[0] === "codex") {
     const launch = deps.agent.launch(argv.slice(1));
-    return await deps.terminal.run({
-      args: launch.args,
-      command: launch.command,
-      cwd: deps.cwd,
-      environment: deps.environment,
+    const voice = new CodexVoiceController({
+      providerFactory: () => deps.providerFactory(deps.environment),
+      recorderFactory: () => deps.recorderFactory({}),
+      secrets: [deps.environment.OPENAI_API_KEY ?? ""],
+      status: (message, level) => {
+        if (level === "error") {
+          deps.stderr.write(`\r\nvoice: ${message}\r\n`);
+        } else {
+          deps.stderr.write(`\x1b]2;voice: ${message}\x07`);
+        }
+      },
     });
+    deps.stderr.write(
+      "Voice control: press F2 once to start recording and again to stop. Transcripts are inserted for review, not submitted.\n",
+    );
+    try {
+      return await deps.terminal.run({
+        args: launch.args,
+        command: launch.command,
+        cwd: deps.cwd,
+        environment: deps.environment,
+        inputFilter: (data, session) => voice.filterInput(data, session),
+      });
+    } finally {
+      await voice.close();
+    }
   }
   if (argv[0] !== "test") {
     throw new Error(`Unknown command: ${argv[0]}. Run voice --help for usage.`);
@@ -78,7 +104,7 @@ export async function runCli(
   });
 
   deps.stderr.write(
-    `Hosted transcription: recorded audio will be sent to OpenAI using ${provider.model}.\n`,
+    "Hosted transcription: recorded audio will be sent to OpenAI.\n",
   );
   deps.stderr.write("Recording... press Enter to stop.\n");
   const session = await recorder.start();
