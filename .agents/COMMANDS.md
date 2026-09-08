@@ -60,3 +60,6 @@ OPENAI_API_KEY=... node apps/cli/dist/main.js test --device "Microphone name"
 
 Do not claim microphone or hosted API behavior passed based only on automated
 tests; exercise those integrations explicitly and report the tested platform.
+The maintainer confirmed the merged Milestone 1 `voice test` flow with a real
+microphone and OpenAI credential on macOS. This does not verify other platforms
+or future changes to the integration path.

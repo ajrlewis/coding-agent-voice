@@ -26,9 +26,9 @@ The coding agent itself remains responsible for understanding the repository, re
 
 ## Status
 
-Early development.
-
-The initial goal is to prove a small, reliable end-to-end workflow:
+Milestone 1 is implemented. The maintainer has exercised the complete
+`voice test` flow on macOS with a real microphone and the OpenAI transcription
+API:
 
 ```text
 microphone
@@ -39,12 +39,42 @@ speech-to-text
     ↓
 transcript
     ↓
-Codex / Claude Code
-    ↓
-repository
+stdout
 ```
 
-The project should remain narrow until this core interaction works well.
+The current workspace contains the CLI, audio, and transcription packages needed
+for that slice. Codex, Claude Code, and PTY integration are not implemented yet;
+Milestone 2 is the next product milestone.
+
+## Quick start
+
+Requirements:
+
+* Node.js 22 or newer
+* pnpm 10.29.2
+* FFmpeg with AVFoundation on macOS, DirectShow on Windows, or PulseAudio/ALSA
+  on Linux
+* an OpenAI API key
+
+Install, configure, and build:
+
+```bash
+pnpm install
+cp .env.example .env.local
+# Add OPENAI_API_KEY to .env.local.
+pnpm build
+```
+
+Then test the microphone-to-transcript flow:
+
+```bash
+node apps/cli/dist/main.js test
+```
+
+Recording starts immediately. Press Enter to stop recording and send the audio
+to OpenAI for transcription. Status and privacy messages go to stderr; only the
+transcript is written to stdout. `.env.local` is ignored by Git, and an exported
+`OPENAI_API_KEY` takes precedence over the file.
 
 ## Goals
 
@@ -127,17 +157,22 @@ The coding agent is already the reasoning layer.
 
 ## CLI
 
-The primary commands should eventually be:
+The currently implemented command is:
+
+```bash
+voice test
+```
+
+The planned primary commands are:
 
 ```bash
 voice codex
 voice claude
 ```
 
-Additional utility commands may include:
+Additional planned utility commands may include:
 
 ```bash
-voice test
 voice doctor
 voice config
 ```
@@ -179,9 +214,7 @@ voice claude
 
 Tests the microphone and transcription pipeline without starting a coding agent.
 
-The initial implementation should make this one of the first working milestones.
-
-Conceptually:
+Current behavior:
 
 ```bash
 voice test
@@ -310,26 +343,24 @@ Possible future interactions include:
 
 Transcription must be provider-based.
 
-The core package should expose an interface similar to:
+The core package exposes a provider interface equivalent to:
 
 ```ts
 export interface TranscriptionProvider {
   transcribe(
-    audio: Buffer,
+    audio: TranscriptionAudio,
     options?: TranscriptionOptions,
   ): Promise<string>;
 }
 ```
 
-The initial provider should use the OpenAI transcription API.
-
-A likely initial model is:
+The implemented provider uses the OpenAI transcription API. Its default model is:
 
 ```text
 gpt-4o-transcribe
 ```
 
-The OpenAI provider should use the standard:
+The OpenAI provider uses the standard:
 
 ```text
 OPENAI_API_KEY
@@ -430,7 +461,7 @@ voice codex
 
 The project is a TypeScript monorepo using pnpm workspaces.
 
-Initial structure:
+Implemented structure:
 
 ```text
 coding-agent-voice/
@@ -439,9 +470,7 @@ coding-agent-voice/
 │
 ├── packages/
 │   ├── audio/
-│   ├── transcription/
-│   ├── agents/
-│   └── terminal/
+│   └── transcription/
 │
 ├── package.json
 ├── pnpm-workspace.yaml
@@ -455,7 +484,7 @@ Additional packages should only be introduced when a clear architectural boundar
 
 ## Packages
 
-### `apps/cli`
+### `apps/cli` (implemented)
 
 The user-facing `voice` executable.
 
@@ -471,7 +500,7 @@ Responsibilities:
 
 It should contain orchestration rather than implementation-heavy domain logic.
 
-### `packages/audio`
+### `packages/audio` (implemented)
 
 Audio capture primitives.
 
@@ -486,7 +515,7 @@ Responsibilities may include:
 
 The package should not know anything about Codex, Claude, or transcription providers.
 
-### `packages/transcription`
+### `packages/transcription` (implemented)
 
 Speech-to-text abstraction and implementations.
 
@@ -509,7 +538,7 @@ Responsibilities:
 
 Future local Whisper implementations should conform to the same abstraction.
 
-### `packages/agents`
+### `packages/agents` (planned for Milestones 2 and 3)
 
 Coding-agent adapters.
 
@@ -542,7 +571,7 @@ export interface CodingAgent {
 
 Agent adapters must not contain transcription or audio logic.
 
-### `packages/terminal`
+### `packages/terminal` (planned for Milestone 2)
 
 Interactive terminal process management.
 
@@ -751,7 +780,7 @@ This should remain separate from the core push-to-talk interaction.
 
 ## Milestones
 
-### Milestone 1 — transcription
+### Milestone 1 — transcription (complete)
 
 Make this work reliably:
 
@@ -773,7 +802,12 @@ stdout
 
 No Codex or Claude integration is required for this milestone.
 
-### Milestone 2 — Codex
+Implemented with FFmpeg audio capture, an OpenAI provider boundary, explicit
+hosted-processing disclosure, temporary-file cleanup, `.env.local` support, and
+automated boundary/orchestration tests. The maintainer manually verified the
+complete flow on macOS with a real microphone and API credential.
+
+### Milestone 2 — Codex (next)
 
 Make this work:
 
