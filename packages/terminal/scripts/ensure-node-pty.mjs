@@ -1,6 +1,7 @@
 import { chmod, stat } from "node:fs/promises";
 import { createRequire } from "node:module";
 import { dirname, join, resolve } from "node:path";
+import process from "node:process";
 
 if (process.platform === "darwin") {
   const require = createRequire(import.meta.url);

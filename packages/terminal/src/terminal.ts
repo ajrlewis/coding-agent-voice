@@ -36,7 +36,6 @@ export interface PtyFactory {
 
 export interface TerminalHost {
   getSize(): { columns: number; rows: number };
-  isInputPaused(): boolean;
   isInputRaw(): boolean;
   isInteractive(): boolean;
   offInput(listener: (data: Buffer | string) => void): void;
@@ -135,7 +134,6 @@ export class NodePtyTerminal implements TerminalRunner {
   }
 
   async #proxy(child: PtyProcess): Promise<number> {
-    const wasPaused = this.#host.isInputPaused();
     const wasRaw = this.#host.isInputRaw();
     let finished = false;
     const onInput = (data: Buffer | string): void => {
@@ -190,7 +188,7 @@ export class NodePtyTerminal implements TerminalRunner {
         this.#host.offSignal(signal, listener);
       }
       this.#host.setInputRaw(wasRaw);
-      if (wasPaused) this.#host.pauseInput();
+      this.#host.pauseInput();
     }
   }
 }
@@ -243,10 +241,6 @@ class ProcessTerminalHost implements TerminalHost {
       columns: Math.max(process.stdout.columns ?? 80, 1),
       rows: Math.max(process.stdout.rows ?? 24, 1),
     };
-  }
-
-  isInputPaused(): boolean {
-    return process.stdin.isPaused();
   }
 
   isInputRaw(): boolean {

@@ -58,10 +58,6 @@ class FakeHost implements TerminalHost {
     return this.size;
   }
 
-  isInputPaused(): boolean {
-    return this.paused;
-  }
-
   isInputRaw(): boolean {
     return this.raw;
   }
@@ -115,6 +111,7 @@ class FakeHost implements TerminalHost {
 test("spawns in the requested directory and proxies terminal lifecycle", async () => {
   const child = new FakePty();
   const host = new FakeHost();
+  host.paused = false;
   let spawnCall: Parameters<PtyFactory["spawn"]> | undefined;
   let notifySpawned!: () => void;
   const spawned = new Promise<void>((resolve) => (notifySpawned = resolve));
