@@ -1,16 +1,62 @@
 # Commands
 
-## Current state
+## Requirements
 
-There are no project commands yet. The repository has no application scaffold,
-package manifest, lockfile, source, tests, or CI. Commands shown in `README.md`
-describe the intended product interface and are not runnable implementations.
+- Node.js 22 or newer.
+- pnpm 10.29.2, pinned by the root `packageManager` field.
+- FFmpeg with the platform capture backend needed at runtime: AVFoundation on
+  macOS, DirectShow on Windows, or PulseAudio/ALSA on Linux.
 
-## Expected toolchain
+## Setup
 
-The declared target stack is TypeScript, Node.js, pnpm, and pnpm workspaces.
-Exact versions and invocations are not established. When application scaffolding
-is approved and added, verify and record install, development, build, typecheck,
-lint/format, unit-test, focused-test, and full-verification commands here.
+```sh
+pnpm install
 
-Do not claim any project check passed until it exists and was run successfully.
+# Optional local credentials. This file is ignored by Git.
+cp .env.example .env.local
+```
+
+## Development and validation
+
+```sh
+# Compile all workspace projects.
+pnpm build
+
+# Strict TypeScript project-reference check.
+pnpm typecheck
+
+# Lint TypeScript and JavaScript.
+pnpm lint
+
+# Check or apply source/config formatting.
+pnpm format:check
+pnpm format
+
+# Build and run all unit/integration-boundary tests.
+pnpm test
+
+# Run one package's tests after compiling.
+pnpm build
+pnpm --filter @coding-agent-voice/audio test
+
+# Run every required local check.
+pnpm check
+```
+
+## CLI
+
+```sh
+pnpm build
+node apps/cli/dist/main.js --help
+
+# Sends the completed recording to OpenAI. Set OPENAI_API_KEY in the shell or
+# the ignored .env.local file.
+OPENAI_API_KEY=... node apps/cli/dist/main.js test
+node apps/cli/dist/main.js test
+
+# Windows requires an explicit DirectShow microphone name.
+OPENAI_API_KEY=... node apps/cli/dist/main.js test --device "Microphone name"
+```
+
+Do not claim microphone or hosted API behavior passed based only on automated
+tests; exercise those integrations explicitly and report the tested platform.

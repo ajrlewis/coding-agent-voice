@@ -1,0 +1,16 @@
+{
+  "name": "@coding-agent-voice/cli",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "voice": "./dist/main.js"
+  },
+  "dependencies": {
+    "@coding-agent-voice/audio": "workspace:*",
+    "@coding-agent-voice/transcription": "workspace:*"
+  },
+  "scripts": {
+    "test": "node --test dist/**/*.test.js"
+  }
+}

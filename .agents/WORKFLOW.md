@@ -26,12 +26,12 @@ directly to `main`.
 
 ## Quality baseline
 
-The repository has no implementation or quality toolchain yet. Establishing the
-TypeScript scaffold, dependencies, tests, static checks, and CI is a material
-implementation decision rather than part of documentation bootstrap. Once
-approved and implemented, use ecosystem-native tools, verify every canonical
-command, and update `.agents/COMMANDS.md`.
+The workspace uses strict TypeScript project references, ESLint, Prettier, and
+Node's built-in test runner. `pnpm check` is the complete local gate and runs
+format checking, linting, typechecking, tests, and a forced build. Keep tests next
+to source as `*.test.ts`; the build emits them before Node runs them.
 
-Application code should ultimately have automated behavior verification plus
-typechecking, formatting/linting, and build validation. Audio, transcription,
-process lifecycle, cleanup, privacy, and failure paths require explicit coverage.
+Use dependency injection at hardware and network boundaries. Automated tests may
+verify orchestration, platform command selection, cleanup/error contracts, and
+HTTP request shape without using a real microphone or API key. Live microphone
+and hosted API claims require a separate manual exercise on the named platform.
