@@ -67,9 +67,11 @@ test("reports an invalid success response clearly", async () => {
 });
 
 test("returns a bounded provider error without exposing the credential", async () => {
+  const credential = "do-not-print-this";
   const provider = new OpenAITranscriptionProvider({
-    apiKey: "do-not-print-this",
-    fetch: async () => new Response("invalid audio", { status: 400 }),
+    apiKey: credential,
+    fetch: async () =>
+      new Response(`invalid audio for ${credential}`, { status: 400 }),
   });
 
   await assert.rejects(
@@ -77,6 +79,25 @@ test("returns a bounded provider error without exposing the credential", async (
     (error: unknown) =>
       error instanceof TranscriptionError &&
       error.message.includes("HTTP 400") &&
-      !error.message.includes("do-not-print-this"),
+      error.message.includes("[redacted]") &&
+      !error.message.includes(credential),
+  );
+});
+
+test("redacts the credential from transport failures", async () => {
+  const credential = "do-not-print-this";
+  const provider = new OpenAITranscriptionProvider({
+    apiKey: credential,
+    fetch: async () => {
+      throw new Error(`transport rejected ${credential}`);
+    },
+  });
+
+  await assert.rejects(
+    provider.transcribe(audio),
+    (error: unknown) =>
+      error instanceof TranscriptionError &&
+      error.message.includes("[redacted]") &&
+      !error.message.includes(credential),
   );
 });
