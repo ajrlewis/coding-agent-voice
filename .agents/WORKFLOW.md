@@ -6,6 +6,10 @@
 architecture, and milestone order. Separate its target state from the repository's
 implemented state.
 
+Milestone 1 is complete and was manually verified by the maintainer on macOS.
+New product implementation should begin with the narrowest verifiable Milestone
+2 slice unless a task explicitly changes priority.
+
 For each change:
 
 1. Read the relevant README sections and `.agents/ARCHITECTURE.md`.
@@ -35,3 +39,6 @@ Use dependency injection at hardware and network boundaries. Automated tests may
 verify orchestration, platform command selection, cleanup/error contracts, and
 HTTP request shape without using a real microphone or API key. Live microphone
 and hosted API claims require a separate manual exercise on the named platform.
+The merged Milestone 1 flow has one such maintainer-confirmed macOS exercise;
+changes to audio capture, provider requests, or CLI orchestration require fresh
+manual verification before making the same claim for the changed behavior.

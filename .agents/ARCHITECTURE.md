@@ -3,7 +3,8 @@
 `README.md` is the canonical product specification. The implemented Milestone 1
 slice currently contains only `apps/cli`, `packages/audio`, and
 `packages/transcription`. The README's `packages/agents` and `packages/terminal`
-boundaries remain target architecture and have not been scaffolded.
+boundaries remain target architecture and have not been scaffolded. Milestone 1
+has been manually verified on macOS; Milestone 2 Codex integration is next.
 
 ## Target runtime
 
@@ -59,4 +60,4 @@ explicit DirectShow microphone name; macOS and Linux default to the system input
 - Repository vocabulary is optional and bounded. Runtime code may read useful
   bootstrap context but must not own or modify it.
 - Implement the README milestones in order unless a task explicitly requires a
-  different slice; `voice test` is the first product milestone.
+  different slice; `voice test` is complete and Codex integration is next.
