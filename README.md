@@ -42,9 +42,11 @@ transcript
 stdout
 ```
 
-The current workspace contains the CLI, audio, and transcription packages needed
-for that slice. Codex, Claude Code, and PTY integration are not implemented yet;
-Milestone 2 is the next product milestone.
+Milestone 2 is in progress. `voice codex [args...]` now owns Codex in an
+interactive PTY, preserving the current directory, terminal I/O, resize and
+supported signal behavior, child exit status, and cleanup. Voice capture,
+transcription, and transcript injection are not connected to the Codex session
+yet. Claude Code is not implemented.
 
 ## Quick start
 
@@ -75,6 +77,16 @@ Recording starts immediately. Press Enter to stop recording and send the audio
 to OpenAI for transcription. Status and privacy messages go to stderr; only the
 transcript is written to stdout. `.env.local` is ignored by Git, and an exported
 `OPENAI_API_KEY` takes precedence over the file.
+
+To exercise the current Codex process-management slice:
+
+```bash
+cd my-project
+node /path/to/coding-agent-voice/apps/cli/dist/main.js codex [args...]
+```
+
+Codex must be installed and available on `PATH`. This command does not provide
+voice input yet.
 
 ## Goals
 
@@ -157,16 +169,16 @@ The coding agent is already the reasoning layer.
 
 ## CLI
 
-The currently implemented command is:
+The currently implemented commands are:
 
 ```bash
+voice codex [args...]
 voice test
 ```
 
-The planned primary commands are:
+The remaining planned primary command is:
 
 ```bash
-voice codex
 voice claude
 ```
 
@@ -179,7 +191,7 @@ voice config
 
 ### `voice codex`
 
-Starts Codex with voice input enabled.
+Starts Codex in an owned interactive PTY. Voice input is not connected yet.
 
 ```bash
 cd ~/code/project
@@ -200,7 +212,7 @@ should behave conceptually like:
 codex --resume
 ```
 
-while retaining voice support.
+while retaining normal interactive terminal behavior.
 
 ### `voice claude`
 
@@ -469,7 +481,9 @@ coding-agent-voice/
 │   └── cli/
 │
 ├── packages/
+│   ├── agents/
 │   ├── audio/
+│   ├── terminal/
 │   └── transcription/
 │
 ├── package.json
@@ -538,15 +552,15 @@ Responsibilities:
 
 Future local Whisper implementations should conform to the same abstraction.
 
-### `packages/agents` (planned for Milestones 2 and 3)
+### `packages/agents` (Codex adapter implemented)
 
 Coding-agent adapters.
 
 Initial agents:
 
 ```text
-Codex
-Claude Code
+Codex (implemented)
+Claude Code (planned)
 ```
 
 An adapter should describe how to:
@@ -562,16 +576,16 @@ Conceptually:
 
 ```ts
 export interface CodingAgent {
-  name: string;
-  command: string;
-
-  args(userArgs: string[]): string[];
+  launch(userArgs: readonly string[]): {
+    command: string;
+    args: string[];
+  };
 }
 ```
 
 Agent adapters must not contain transcription or audio logic.
 
-### `packages/terminal` (planned for Milestone 2)
+### `packages/terminal` (process-management slice implemented)
 
 Interactive terminal process management.
 
@@ -586,6 +600,10 @@ Responsibilities:
 * signal handling
 
 This package provides the boundary between the voice system and interactive coding-agent TUIs.
+
+The current node-pty-backed implementation provides process ownership, I/O
+proxying, resize and supported signal forwarding, exit propagation, and cleanup.
+Transcript injection is not implemented yet.
 
 ## Possible future packages
 
@@ -807,7 +825,7 @@ hosted-processing disclosure, temporary-file cleanup, `.env.local` support, and
 automated boundary/orchestration tests. The maintainer manually verified the
 complete flow on macOS with a real microphone and API credential.
 
-### Milestone 2 — Codex (next)
+### Milestone 2 — Codex (in progress)
 
 Make this work:
 
@@ -826,6 +844,11 @@ Requirements:
 * cleanly exit when Codex exits
 
 This is the first complete product milestone.
+
+Implemented so far: the Codex adapter, argument forwarding, executable checks,
+and interactive PTY ownership in the current directory, including I/O, resize,
+supported signals, child exit status, and cleanup. Push-to-talk capture,
+transcription, and transcript injection remain.
 
 ### Milestone 3 — Claude Code
 
