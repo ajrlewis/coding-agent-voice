@@ -1,0 +1,27 @@
+{
+  "name": "coding-agent-voice",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.29.2",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "tsc -b --force",
+    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "format": "prettier --write \"{apps,packages}/**/*.{ts,json}\" \"*.{json,js,yaml}\"",
+    "format:check": "prettier --check \"{apps,packages}/**/*.{ts,json}\" \"*.{json,js,yaml}\"",
+    "lint": "eslint .",
+    "test": "pnpm build && pnpm --recursive --if-present test",
+    "typecheck": "tsc -b"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "26.5.0",
+    "eslint": "10.10.0",
+    "prettier": "3.9.6",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.70.0"
+  }
+}
