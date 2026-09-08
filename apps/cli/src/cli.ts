@@ -1,16 +1,23 @@
 import { createInterface } from "node:readline";
 
+import { CodexAgent, type CodingAgent } from "@coding-agent-voice/agents";
 import {
   FfmpegRecorder,
   type AudioBackend,
   type AudioRecorder,
 } from "@coding-agent-voice/audio";
 import {
+  NodePtyTerminal,
+  type TerminalRunner,
+} from "@coding-agent-voice/terminal";
+import {
   OpenAITranscriptionProvider,
   type TranscriptionProvider,
 } from "@coding-agent-voice/transcription";
 
 export interface CliDependencies {
+  agent: CodingAgent;
+  cwd: string;
   environment: NodeJS.ProcessEnv;
   recorderFactory: (options: {
     backend?: AudioBackend;
@@ -22,10 +29,12 @@ export interface CliDependencies {
   stderr: Pick<NodeJS.WriteStream, "write">;
   stdin: NodeJS.ReadStream;
   stdout: Pick<NodeJS.WriteStream, "write">;
+  terminal: TerminalRunner;
   waitForStop: () => Promise<void>;
 }
 
 const HELP = `Usage:
+  voice codex [args...]
   voice test [--device <name>] [--backend <backend>] [--language <code>]
 
 Backends:
@@ -47,6 +56,15 @@ export async function runCli(
   if (argv.length === 0 || argv[0] === "--help" || argv[0] === "-h") {
     deps.stdout.write(HELP);
     return argv.length === 0 ? 1 : 0;
+  }
+  if (argv[0] === "codex") {
+    const launch = deps.agent.launch(argv.slice(1));
+    return await deps.terminal.run({
+      args: launch.args,
+      command: launch.command,
+      cwd: deps.cwd,
+      environment: deps.environment,
+    });
   }
   if (argv[0] !== "test") {
     throw new Error(`Unknown command: ${argv[0]}. Run voice --help for usage.`);
@@ -130,6 +148,8 @@ function createDependencies(
   const stderr = overrides.stderr ?? process.stderr;
   const stdout = overrides.stdout ?? process.stdout;
   return {
+    agent: overrides.agent ?? new CodexAgent(),
+    cwd: overrides.cwd ?? process.cwd(),
     environment: overrides.environment ?? process.env,
     recorderFactory:
       overrides.recorderFactory ?? ((options) => new FfmpegRecorder(options)),
@@ -140,6 +160,7 @@ function createDependencies(
     stderr,
     stdin,
     stdout,
+    terminal: overrides.terminal ?? new NodePtyTerminal(),
     waitForStop:
       overrides.waitForStop ??
       (async () => {

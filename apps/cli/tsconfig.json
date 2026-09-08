@@ -7,7 +7,9 @@
   },
   "include": ["src/**/*.ts"],
   "references": [
+    { "path": "../../packages/agents" },
     { "path": "../../packages/audio" },
+    { "path": "../../packages/terminal" },
     { "path": "../../packages/transcription" }
   ]
 }

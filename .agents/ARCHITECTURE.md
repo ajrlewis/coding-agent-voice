@@ -1,10 +1,10 @@
 # Architecture
 
-`README.md` is the canonical product specification. The implemented Milestone 1
-slice currently contains only `apps/cli`, `packages/audio`, and
-`packages/transcription`. The README's `packages/agents` and `packages/terminal`
-boundaries remain target architecture and have not been scaffolded. Milestone 1
-has been manually verified on macOS; Milestone 2 Codex integration is next.
+`README.md` is the canonical product specification. Milestone 1 is complete, and
+the first Milestone 2 slice adds `packages/agents` and `packages/terminal`.
+`voice codex [args...]` now owns Codex in an interactive PTY in the current
+directory. Voice capture, transcription, and transcript injection into that
+session remain unimplemented. Milestone 1 has been manually verified on macOS.
 
 ## Target runtime
 
@@ -19,9 +19,9 @@ system, or LLM proxy.
 
 ## Intended boundaries
 
-- `apps/cli` (implemented): parses `voice test`, validates provider configuration,
-  coordinates recording/transcription, owns user-facing output, and cancels a
-  recording when waiting for input is interrupted.
+- `apps/cli` (implemented): parses `voice test` and `voice codex`, validates
+  provider configuration for the test flow, coordinates runtime boundaries,
+  owns user-facing output, and propagates Codex's exit status.
 - `packages/audio` (implemented): defines recorder/session contracts and an FFmpeg
   recorder. Platform strategies use AVFoundation on macOS, DirectShow on Windows,
   and prefer PulseAudio over ALSA when those inputs are compiled into FFmpeg on
@@ -33,9 +33,12 @@ system, or LLM proxy.
   ignored `.env.local` file. Exported values take precedence. The default model
   is `gpt-4o-transcribe` and can be changed with
   `OPENAI_TRANSCRIPTION_MODEL`.
-- `packages/agents`: small executable and argument adapters for coding agents.
-- `packages/terminal`: PTY spawning, I/O proxying, transcript injection, resize,
-  signals, and child-process lifecycle.
+- `packages/agents` (implemented for Codex): small executable and argument
+  adapters that do not contain audio or transcription logic.
+- `packages/terminal` (process management implemented): executable discovery and
+  injected PTY/host-terminal boundaries backed by node-pty 1.1.0. It proxies I/O,
+  resize events, and supported signals; propagates child exit status; restores
+  terminal state; and removes listeners on exit. Transcript injection remains.
 
 Dependencies should point inward through these contracts. Audio must not know
 about agents or providers; agent adapters must not know about audio or
@@ -46,6 +49,10 @@ The CLI depends on the audio and transcription packages. Those packages do not
 depend on each other. FFmpeg is an explicit runtime dependency rather than a Node
 package or platform-specific application build. Windows currently requires an
 explicit DirectShow microphone name; macOS and Linux default to the system input.
+The CLI also depends on the agents and terminal packages; those packages remain
+independent of audio and transcription. node-pty is allowlisted as the sole pnpm
+native build dependency, and the terminal package repairs the executable bit
+missing from node-pty 1.1.0's bundled macOS spawn helper during installation.
 
 ## Invariants
 

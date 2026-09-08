@@ -7,8 +7,10 @@ architecture, and milestone order. Separate its target state from the repository
 implemented state.
 
 Milestone 1 is complete and was manually verified by the maintainer on macOS.
-New product implementation should begin with the narrowest verifiable Milestone
-2 slice unless a task explicitly changes priority.
+Milestone 2 is in progress: Codex process ownership and PTY lifecycle are
+implemented, while voice capture and transcript injection into that session are
+not. Continue with the narrowest verifiable remaining Milestone 2 slice unless a
+task explicitly changes priority.
 
 For each change:
 
@@ -42,3 +44,5 @@ and hosted API claims require a separate manual exercise on the named platform.
 The merged Milestone 1 flow has one such maintainer-confirmed macOS exercise;
 changes to audio capture, provider requests, or CLI orchestration require fresh
 manual verification before making the same claim for the changed behavior.
+The terminal package likewise injects PTY and host-terminal boundaries; report
+real agent/PTY exercises separately from those automated tests.

@@ -1,7 +1,9 @@
 {
   "files": [],
   "references": [
+    { "path": "packages/agents" },
     { "path": "packages/audio" },
+    { "path": "packages/terminal" },
     { "path": "packages/transcription" },
     { "path": "apps/cli" }
   ]

@@ -7,7 +7,9 @@
     "voice": "./dist/main.js"
   },
   "dependencies": {
+    "@coding-agent-voice/agents": "workspace:*",
     "@coding-agent-voice/audio": "workspace:*",
+    "@coding-agent-voice/terminal": "workspace:*",
     "@coding-agent-voice/transcription": "workspace:*"
   },
   "scripts": {
