@@ -1,8 +1,9 @@
 # Architecture
 
-`README.md` is the canonical product specification. The repository is currently
-README-first: the target architecture below is declared intent, not implemented
-state.
+`README.md` is the canonical product specification. The implemented Milestone 1
+slice currently contains only `apps/cli`, `packages/audio`, and
+`packages/transcription`. The README's `packages/agents` and `packages/terminal`
+boundaries remain target architecture and have not been scaffolded.
 
 ## Target runtime
 
@@ -17,9 +18,18 @@ system, or LLM proxy.
 
 ## Intended boundaries
 
-- `apps/cli`: parsing, configuration, orchestration, lifecycle, and diagnostics.
-- `packages/audio`: recording, device access, normalization, and temporary audio.
-- `packages/transcription`: provider contract and hosted or local implementations.
+- `apps/cli` (implemented): parses `voice test`, validates provider configuration,
+  coordinates recording/transcription, owns user-facing output, and cancels a
+  recording when waiting for input is interrupted.
+- `packages/audio` (implemented): defines recorder/session contracts and an FFmpeg
+  recorder. Platform strategies use AVFoundation on macOS, DirectShow on Windows,
+  and prefer PulseAudio over ALSA when those inputs are compiled into FFmpeg on
+  Linux. Recordings are normalized to mono 16 kHz PCM WAV, read into memory, and
+  removed from temporary storage before the provider receives them.
+- `packages/transcription` (implemented): defines the provider contract and an
+  OpenAI hosted implementation using the audio transcriptions endpoint. The API
+  key comes only from `OPENAI_API_KEY`; the default model is
+  `gpt-4o-transcribe` and can be changed with `OPENAI_TRANSCRIPTION_MODEL`.
 - `packages/agents`: small executable and argument adapters for coding agents.
 - `packages/terminal`: PTY spawning, I/O proxying, transcript injection, resize,
   signals, and child-process lifecycle.
@@ -28,6 +38,11 @@ Dependencies should point inward through these contracts. Audio must not know
 about agents or providers; agent adapters must not know about audio or
 transcription; provider details must not leak into terminal behavior; the CLI
 coordinates rather than accumulating domain logic.
+
+The CLI depends on the audio and transcription packages. Those packages do not
+depend on each other. FFmpeg is an explicit runtime dependency rather than a Node
+package or platform-specific application build. Windows currently requires an
+explicit DirectShow microphone name; macOS and Linux default to the system input.
 
 ## Invariants
 
