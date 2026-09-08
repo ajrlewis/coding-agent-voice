@@ -29,9 +29,15 @@ importers:
 
   apps/cli:
     dependencies:
+      '@coding-agent-voice/agents':
+        specifier: workspace:*
+        version: link:../../packages/agents
       '@coding-agent-voice/audio':
         specifier: workspace:*
         version: link:../../packages/audio
+      '@coding-agent-voice/terminal':
+        specifier: workspace:*
+        version: link:../../packages/terminal
       '@coding-agent-voice/transcription':
         specifier: workspace:*
         version: link:../../packages/transcription

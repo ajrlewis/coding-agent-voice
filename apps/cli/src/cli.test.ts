@@ -5,6 +5,7 @@ import type {
   AudioRecorder,
   RecordingSession,
 } from "@coding-agent-voice/audio";
+import type { TerminalRunRequest } from "@coding-agent-voice/terminal";
 import type { TranscriptionProvider } from "@coding-agent-voice/transcription";
 
 import { runCli, type CliDependencies } from "./cli.js";
@@ -98,6 +99,38 @@ test("missing credentials fail before microphone capture", async () => {
   assert.equal(recorderCreated, false);
 });
 
+test("voice codex forwards arguments and the current directory", async () => {
+  const stdout = output();
+  const stderr = output();
+  let request: TerminalRunRequest | undefined;
+
+  const code = await runCli(["codex", "--resume", "session with spaces"], {
+    agent: {
+      launch: (args) => ({ command: "/tools/codex", args: [...args] }),
+    },
+    cwd: "/work/current-project",
+    environment: { PATH: "/tools", SECRET_VALUE: "must-not-be-printed" },
+    stderr,
+    stdout,
+    terminal: {
+      run: async (runRequest) => {
+        request = runRequest;
+        return 23;
+      },
+    },
+  });
+
+  assert.equal(code, 23);
+  assert.deepEqual(request, {
+    args: ["--resume", "session with spaces"],
+    command: "/tools/codex",
+    cwd: "/work/current-project",
+    environment: { PATH: "/tools", SECRET_VALUE: "must-not-be-printed" },
+  });
+  assert.equal(stdout.chunks.join(""), "");
+  assert.equal(stderr.chunks.join(""), "");
+});
+
 test("cancels the recording when waiting for input fails", async () => {
   let cancelled = false;
   const recorder: AudioRecorder = {
@@ -129,7 +162,7 @@ test("cancels the recording when waiting for input fails", async () => {
 });
 
 test("rejects unsupported commands and options", async () => {
-  await assert.rejects(runCli(["codex"]), /Unknown command/);
+  await assert.rejects(runCli(["claude"]), /Unknown command/);
   await assert.rejects(
     runCli(["test", "--backend", "coreaudio"]),
     /Unsupported backend/,
