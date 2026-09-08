@@ -55,6 +55,12 @@ export interface TerminalRunRequest {
   command: string;
   cwd: string;
   environment: NodeJS.ProcessEnv;
+  inputFilter?: (data: string, session: TerminalSession) => string;
+}
+
+export interface TerminalSession {
+  readonly exited: Promise<number>;
+  inject(data: string): boolean;
 }
 
 export interface TerminalRunner {
@@ -130,15 +136,15 @@ export class NodePtyTerminal implements TerminalRunner {
       );
     }
 
-    return await this.#proxy(child);
+    return await this.#proxy(child, request.inputFilter);
   }
 
-  async #proxy(child: PtyProcess): Promise<number> {
+  async #proxy(
+    child: PtyProcess,
+    inputFilter?: TerminalRunRequest["inputFilter"],
+  ): Promise<number> {
     const wasRaw = this.#host.isInputRaw();
     let finished = false;
-    const onInput = (data: Buffer | string): void => {
-      child.write(typeof data === "string" ? data : data.toString("utf8"));
-    };
     const onResize = (): void => {
       if (finished) return;
       const size = this.#host.getSize();
@@ -164,6 +170,19 @@ export class NodePtyTerminal implements TerminalRunner {
     const exit = new Promise<number>((resolveExit) => {
       exitSubscription = child.onExit(({ exitCode }) => resolveExit(exitCode));
     });
+    const session: TerminalSession = {
+      exited: exit,
+      inject: (data) => {
+        if (finished) return false;
+        child.write(data);
+        return true;
+      },
+    };
+    const onInput = (data: Buffer | string): void => {
+      const text = typeof data === "string" ? data : data.toString("utf8");
+      const filtered = inputFilter?.(text, session) ?? text;
+      if (filtered !== "") session.inject(filtered);
+    };
     const dataSubscription = child.onData((data) => {
       this.#host.writeOutput(data);
     });
